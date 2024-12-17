@@ -1,0 +1,232 @@
+import flet as ft
+
+def main(page: ft.Page):
+    #the state visibility (to track)
+    visibility = {
+        "savings": False,
+        "tips": False,
+        "planning": False
+    }
+
+    def calculate_tax(e):
+        try:
+            income = float(income_input.value or 0)
+            deductions = float(deductions_input.value or 0)
+            taxable_income = income - deductions
+
+            # to enchance tax calc with slabs
+            tax = 0
+            slabs = [(250000, 0.05), (500000, 0.1), (1000000, 0.2)]
+            slab_breakdown = []
+            for i, slab in enumerate(slabs):
+                if taxable_income > slab[0]:
+                    tax += (min(taxable_income, slab[0]) - (slab[0] - 250000)) * slab[1]
+                    slab_breakdown.append(f"Slab {i+1}: ₹{min(taxable_income, slab[0])} at {slab[1] * 100}%")
+                else:
+                    break
+
+            if taxable_income > 1000000:
+                tax += (taxable_income - 1000000) * 0.3 + 112500
+                slab_breakdown.append(f"Above ₹1,000,000: ₹{taxable_income - 1000000} at 30%")
+
+            cess = tax * 0.04  # Health and Education Cess
+            total_tax = tax + cess
+
+            result_label.value = f"Total Tax: ₹{total_tax:.2f} (including ₹{cess:.2f} cess)"
+            breakdown_label.value = "\n".join(slab_breakdown)
+            breakdown_label.update()
+        except ValueError:
+            result_label.value = 'Invalid input. Please enter numeric values.'
+
+        result_label.update()
+
+    def toggle_section(section):
+        visibility[section] = not visibility[section]
+        if section == "savings":
+            savings_label.visible = visibility["savings"]
+            savings_label.update()
+        elif section == "tips":
+            tips_label.visible = visibility["tips"]
+            tips_label.update()
+        elif section == "planning":
+            planning_label.visible = visibility["planning"]
+            planning_label.update()
+
+    def suggest_tax_savings(e):
+        if not visibility["savings"]:
+            savings_label.value = "\n".join([
+                "Invest up to ₹1.5 lakh in 80C options like PPF, NSC, ELSS, etc.",
+                "Consider taking a health insurance policy under Section 80D.",
+                "Donate to approved charities under Section 80G for additional deductions.",
+                "Claim interest on home loan under Section 24(b) up to ₹2 lakh.",
+                "Make use of Section 10(14) exemptions for house rent allowance (HRA)."
+            ])
+        toggle_section("savings")
+
+    def provide_tax_tips(e):
+        if not visibility["tips"]:
+            tips_label.value = "\n".join([
+                "Keep track of all your receipts and documents for deductions.",
+                "Invest early in the financial year to maximize tax-saving benefits.",
+                "Consult a tax advisor to optimize your tax planning and investment strategy.",
+                "Review your tax planning annually to adjust for any changes in income or tax laws."
+            ])
+        toggle_section("tips")
+
+    def how_to_do_tax_planning(e):
+        if not visibility["planning"]:
+            planning_label.value = "\n".join([
+                "1. Understand Tax Slabs: Familiarize yourself with the current tax slabs to optimize your tax planning.",
+                "2. Maximize Deductions: Utilize tax-saving investments and deductions under sections like 80C, 80D, and 24(b).",
+                "3. Keep Records: Maintain accurate records of your income, investments, and expenses to ensure all deductions are claimed.",
+                "4. Plan Investments: Invest in eligible schemes early in the financial year to take full advantage of tax benefits.",
+                "5. Consult Professionals: Seek advice from tax professionals to ensure compliance and optimal tax savings.",
+                "6. Review Annually: Reassess your tax plan annually to adapt to any changes in income, tax laws, or financial goals."
+            ])
+        toggle_section("planning")
+
+    def reset_fields(e):
+        income_input.value = ""
+        deductions_input.value = ""
+        result_label.value = "Tax will be displayed here"
+        breakdown_label.value = ""
+        savings_label.value = ""
+        tips_label.value = ""
+        planning_label.value = ""
+        income_input.update()
+        deductions_input.update()
+        result_label.update()
+        breakdown_label.update()
+        savings_label.update()
+        tips_label.update()
+        planning_label.update()
+
+    #the page
+    page.title = "Tax Calculator and Planner"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.padding = 20
+    page.bgcolor = ft.colors.LIGHT_GREEN_50
+
+    #title
+    title = ft.Text(
+        value="Tax Calculator and Planner",
+        size=45,
+        color=ft.colors.BLACK,
+        weight=ft.FontWeight.BOLD,
+    )
+
+    #income and deduc
+    income_input = ft.TextField(
+        label="Enter income in rupees",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        bgcolor=ft.colors.WHITE,
+        color=ft.colors.BLACK,
+        border_color=ft.colors.GREEN,
+    )
+    deductions_input = ft.TextField(
+        label="Enter deductions in rupees",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        bgcolor=ft.colors.WHITE,
+        color=ft.colors.BLACK,
+        border_color=ft.colors.GREEN,
+    )
+
+    #calc button
+    calculate_button = ft.ElevatedButton(
+        text="Calculate Tax",
+        on_click=calculate_tax,
+        bgcolor=ft.colors.GREEN,
+        color=ft.colors.WHITE,
+    )
+
+    #result button
+    result_label = ft.Text(
+        value="Tax will be displayed here",
+        size=20,
+        color=ft.colors.BLACK,
+        weight=ft.FontWeight.BOLD
+    )
+
+    #breakdown
+    breakdown_label = ft.Text(
+        value="",
+        size=16,
+        color=ft.colors.BLACK,
+    )
+
+    #suggestion button 4 tax
+    savings_button = ft.ElevatedButton(
+        text="Suggest Tax Savings",
+        on_click=suggest_tax_savings,
+        bgcolor=ft.colors.ORANGE_500,
+        color=ft.colors.WHITE,
+    )
+    savings_label = ft.Text(
+        value="",
+        size=18,
+        color=ft.colors.BLACK,
+        italic=True,
+        visible=False
+    )
+
+    #tips
+    tips_button = ft.ElevatedButton(
+        text="Tax Planning Tips",
+        on_click=provide_tax_tips,
+        bgcolor=ft.colors.ORANGE_500,
+        color=ft.colors.WHITE,
+    )
+    tips_label = ft.Text(
+        value="",
+        size=18,
+        color=ft.colors.BLACK,
+        italic=True,
+        visible=False
+    )
+
+    #guide button
+    planning_button = ft.ElevatedButton(
+        text="How to Do Tax Planning",
+        on_click=how_to_do_tax_planning,
+        bgcolor=ft.colors.ORANGE_500,
+        color=ft.colors.WHITE,
+    )
+    planning_label = ft.Text(
+        value="",
+        size=16,
+        color=ft.colors.BLACK,
+        italic=True,
+        visible=False
+    )
+
+    #reset button
+    reset_button = ft.ElevatedButton(
+        text="Reset",
+        on_click=reset_fields,
+        bgcolor=ft.colors.RED,
+        color=ft.colors.WHITE,
+    )
+
+    #UI
+    page.add(
+        ft.Column(
+            controls=[
+                title,
+                income_input,
+                deductions_input,
+                calculate_button,
+                result_label,
+                breakdown_label,
+                savings_button,
+                savings_label,
+                tips_button,
+                tips_label,
+                planning_button,
+                planning_label,
+                reset_button,
+            ],
+            spacing=20,
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
+    )
